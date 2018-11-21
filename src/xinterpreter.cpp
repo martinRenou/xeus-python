@@ -39,9 +39,15 @@ namespace xpyt
         redirect_display();
 
         // Monkey patch "from ipykernel.comm import Comm" if it's there
-        py::module xeus_python_comm = py::module::import("xeus_python_comm");
-        py::object xpython_comm = xeus_python_comm.attr("XPythonComm");
-        py::module::import("ipykernel.comm").attr("Comm") = xpython_comm;
+        try {
+            py::module xeus_python_comm = py::module::import("xeus_python_comm");
+            py::object xpython_comm = xeus_python_comm.attr("XPythonComm");
+            py::module::import("ipykernel.comm").attr("Comm") = xpython_comm;
+        }
+        catch(const std::exception& /*e*/) {
+            // Ignoring exception, as it's certainly an Import Error because
+            // ipywidgets is not installed
+        }
     }
 
     interpreter::~interpreter() {}
