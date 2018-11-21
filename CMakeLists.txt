@@ -92,6 +92,7 @@ set(XEUSCLING_SRC
     src/xlogger.cpp
     src/xdisplay.cpp
     src/xpyt_config.hpp
+    src/xutils.cpp
 )
 
 set(LIBS ${PYTHON_LIBRARIES} xeus)
