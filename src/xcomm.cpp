@@ -10,11 +10,11 @@
 #include <string>
 #include <vector>
 
-#include "pybind11/pybind11.h"
-#include "pybind11/embed.h"
-
 #include "xeus/xinterpreter.hpp"
 #include "xeus/xcomm.hpp"
+
+#include "pybind11/pybind11.h"
+#include "pybind11/embed.h"
 
 #include "xutils.hpp"
 #include "xcomm.hpp"

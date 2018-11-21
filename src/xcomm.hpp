@@ -13,10 +13,10 @@
 #include <string>
 #include <functional>
 
+#include "xeus/xcomm.hpp"
+
 #include "pybind11/pybind11.h"
 #include "pybind11/functional.h"
-
-#include "xeus/xcomm.hpp"
 
 namespace py = pybind11;
 
