@@ -9,6 +9,7 @@
 
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 #include "xeus/xjson.hpp"
 #include "xeus/xcomm.hpp"
@@ -22,6 +23,18 @@ namespace py = pybind11;
 namespace xpyt
 {
 
+    zmq::message_t pybytes_to_zmq_message(py::bytes bytes)
+    {
+        char* buffer;
+        Py_ssize_t length;
+#if PY_MAJOR_VERSION >= 3
+        PyBytes_AsStringAndSize(bytes.ptr(), &buffer, &length);
+#else
+        PyString_AsStringAndSize(bytes.ptr(), &buffer, &length);
+#endif
+        return zmq::message_t(buffer, length);
+    }
+
     xeus::xjson pydict_to_xjson(py::dict dict)
     {
         py::module py_json = py::module::import("json");
@@ -31,7 +44,7 @@ namespace xpyt
         ));
     }
 
-    py::dict xjson_to_pydict(xeus::xjson json)
+    py::dict xjson_to_pydict(const xeus::xjson& json)
     {
         py::module py_json = py::module::import("json");
 
@@ -52,10 +65,9 @@ namespace xpyt
     std::vector<zmq::message_t> pylist_to_zmq_buffers(py::list bufferlist)
     {
         std::vector<zmq::message_t> buffers;
-        for (py::handle bytes_data: bufferlist)
+        for (py::handle bytes: bufferlist)
         {
-            std::string s = static_cast<std::string>(bytes_data.cast<py::bytes>());
-            buffers.push_back(zmq::message_t(s.c_str(), s.size()));
+            buffers.push_back(pybytes_to_zmq_message(bytes.cast<py::bytes>()));
         }
         return buffers;
     }
