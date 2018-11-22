@@ -27,7 +27,7 @@ namespace xpyt
     xcomm::xcomm(py::args /*args*/, py::kwargs kwargs)
         : m_comm(target(kwargs), id(kwargs))
     {
-        m_comm.open(metadata(kwargs), data(kwargs), buffers(kwargs));
+        m_comm.open(json_metadata(kwargs), json_data(kwargs), zmq_buffers(kwargs));
     }
 
     xcomm::~xcomm()
@@ -46,12 +46,12 @@ namespace xpyt
 
     void xcomm::close(py::args /*args*/, py::kwargs kwargs)
     {
-        m_comm.close(metadata(kwargs), data(kwargs), buffers(kwargs));
+        m_comm.close(json_metadata(kwargs), json_data(kwargs), zmq_buffers(kwargs));
     }
 
     void xcomm::send(py::args /*args*/, py::kwargs kwargs)
     {
-        m_comm.send(metadata(kwargs), data(kwargs), buffers(kwargs));
+        m_comm.send(json_metadata(kwargs), json_data(kwargs), zmq_buffers(kwargs));
     }
 
     void xcomm::on_msg(python_callback_type callback)
@@ -81,34 +81,39 @@ namespace xpyt
         }
     }
 
-    xeus::xjson xcomm::data(py::kwargs kwargs) const
+    xeus::xjson xcomm::json_data(py::kwargs kwargs) const
     {
         return pydict_to_xjson(kwargs.attr("get")("data", py::dict()));
     }
 
-    xeus::xjson xcomm::metadata(py::kwargs kwargs) const
+    xeus::xjson xcomm::json_metadata(py::kwargs kwargs) const
     {
         return pydict_to_xjson(kwargs.attr("get")("metadata", py::dict()));
     }
 
-    auto xcomm::buffers(py::kwargs kwargs) const -> zmq_buffers_type
+    auto xcomm::zmq_buffers(py::kwargs kwargs) const -> zmq_buffers_type
     {
         return pylist_to_zmq_buffers(kwargs.attr("get")("buffers", py::list()));
     }
 
-    auto xcomm::cpp_callback(python_callback_type callback) const -> cpp_callback_type
+    py::dict xcomm::py_message(const xeus::xmessage& msg) const
     {
-        return [callback] (const xeus::xmessage& message) {
-            xeus::xjson json_message;
-            json_message["header"] = message.header();
-            json_message["parent_header"] = message.parent_header();
-            json_message["metadata"] = message.metadata();
-            json_message["content"] = message.content();
+        xeus::xjson json_msg;
+        json_msg["header"] = msg.header();
+        json_msg["parent_header"] = msg.parent_header();
+        json_msg["metadata"] = msg.metadata();
+        json_msg["content"] = msg.content();
 
-            py::dict dict_message = xjson_to_pydict(json_message);
-            dict_message["buffers"] = zmq_buffers_to_pylist(message.buffers());
+        py::dict py_msg = xjson_to_pydict(json_msg);
+        py_msg["buffers"] = zmq_buffers_to_pylist(msg.buffers());
 
-            callback(dict_message);
+        return py_msg;
+    }
+
+    auto xcomm::cpp_callback(python_callback_type py_callback) const -> cpp_callback_type
+    {
+        return [this, py_callback] (const xeus::xmessage& msg) {
+            py_callback(py_message(msg));
         };
     }
 
