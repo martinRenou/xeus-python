@@ -89,12 +89,12 @@ namespace xpyt
 
     xeus::xjson xcomm::json_data(py::kwargs kwargs) const
     {
-        return pydict_to_xjson(kwargs.attr("get")("data", py::dict()));
+        return pyobj_to_xjson(kwargs.attr("get")("data", py::dict()));
     }
 
     xeus::xjson xcomm::json_metadata(py::kwargs kwargs) const
     {
-        return pydict_to_xjson(kwargs.attr("get")("metadata", py::dict()));
+        return pyobj_to_xjson(kwargs.attr("get")("metadata", py::dict()));
     }
 
     auto xcomm::zmq_buffers(py::kwargs kwargs) const -> zmq_buffers_type
@@ -111,7 +111,7 @@ namespace xpyt
             json_msg["metadata"] = msg.metadata();
             json_msg["content"] = msg.content();
 
-            py::dict py_msg = xjson_to_pydict(json_msg);
+            py::dict py_msg = xjson_to_pyobj(json_msg);
             py_msg["buffers"] = zmq_buffers_to_pylist(msg.buffers());
 
             py_callback(py_msg);
@@ -127,7 +127,7 @@ namespace xpyt
             json_msg["metadata"] = msg.metadata();
             json_msg["content"] = msg.content();
 
-            py::dict py_msg = xjson_to_pydict(json_msg);
+            py::dict py_msg = xjson_to_pyobj(json_msg);
             py_msg["buffers"] = zmq_buffers_to_pylist(msg.buffers());
 
             callback(xcomm(std::move(comm)), py_msg);

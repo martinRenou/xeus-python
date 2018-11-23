@@ -23,8 +23,8 @@ namespace py = pybind11;
 namespace xpyt
 {
 
-    xeus::xjson pydict_to_xjson(py::dict dict);
-    py::dict xjson_to_pydict(const xeus::xjson& json);
+    xeus::xjson pyobj_to_xjson(py::object obj);
+    py::object xjson_to_pyobj(const xeus::xjson& json);
 
     py::list zmq_buffers_to_pylist(const std::vector<zmq::message_t>& buffers);
     std::vector<zmq::message_t> pylist_to_zmq_buffers(py::list bufferlist);

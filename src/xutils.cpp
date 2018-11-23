@@ -35,16 +35,16 @@ namespace xpyt
         return zmq::message_t(buffer, length);
     }
 
-    xeus::xjson pydict_to_xjson(py::dict dict)
+    xeus::xjson pyobj_to_xjson(py::object obj)
     {
         py::module py_json = py::module::import("json");
 
         return xeus::xjson::parse(static_cast<std::string>(
-            py::str(py_json.attr("dumps")(dict))
+            py::str(py_json.attr("dumps")(obj))
         ));
     }
 
-    py::dict xjson_to_pydict(const xeus::xjson& json)
+    py::object xjson_to_pyobj(const xeus::xjson& json)
     {
         py::module py_json = py::module::import("json");
 
