@@ -72,4 +72,18 @@ namespace xpyt
         return buffers;
     }
 
+    py::object cppmessage_to_pymessage(const xeus::xmessage& msg)
+    {
+        xeus::xjson json_msg;
+        json_msg["header"] = msg.header();
+        json_msg["parent_header"] = msg.parent_header();
+        json_msg["metadata"] = msg.metadata();
+        json_msg["content"] = msg.content();
+
+        py::dict py_msg = xjson_to_pyobj(json_msg);
+        py_msg["buffers"] = zmq_buffers_to_pylist(msg.buffers());
+
+        return py_msg;
+    }
+
 }

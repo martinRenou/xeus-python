@@ -29,6 +29,8 @@ namespace xpyt
     py::list zmq_buffers_to_pylist(const std::vector<zmq::message_t>& buffers);
     std::vector<zmq::message_t> pylist_to_zmq_buffers(py::list bufferlist);
 
+    py::object cppmessage_to_pymessage(const xeus::xmessage& msg);
+
 }
 
 #endif

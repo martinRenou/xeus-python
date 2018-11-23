@@ -105,32 +105,14 @@ namespace xpyt
     auto xcomm::cpp_callback(python_callback_type py_callback) const -> cpp_callback_type
     {
         return [this, py_callback] (const xeus::xmessage& msg) {
-            xeus::xjson json_msg;
-            json_msg["header"] = msg.header();
-            json_msg["parent_header"] = msg.parent_header();
-            json_msg["metadata"] = msg.metadata();
-            json_msg["content"] = msg.content();
-
-            py::dict py_msg = xjson_to_pyobj(json_msg);
-            py_msg["buffers"] = zmq_buffers_to_pylist(msg.buffers());
-
-            py_callback(py_msg);
+            py_callback(cppmessage_to_pymessage(msg));
         };
     }
 
     void register_target(py::str target_name, py::object callback)
     {
         auto cpp_callback = [target_name, callback] (xeus::xcomm&& comm, const xeus::xmessage& msg) {
-            xeus::xjson json_msg;
-            json_msg["header"] = msg.header();
-            json_msg["parent_header"] = msg.parent_header();
-            json_msg["metadata"] = msg.metadata();
-            json_msg["content"] = msg.content();
-
-            py::dict py_msg = xjson_to_pyobj(json_msg);
-            py_msg["buffers"] = zmq_buffers_to_pylist(msg.buffers());
-
-            callback(xcomm(std::move(comm)), py_msg);
+            callback(xcomm(std::move(comm)), cppmessage_to_pymessage(msg));
         };
 
         xeus::get_interpreter().comm_manager().register_comm_target(
