@@ -120,6 +120,11 @@ namespace xpyt
         );
     }
 
+    py::object get_kernel()
+    {
+        return py::none();
+    }
+
     PYBIND11_EMBEDDED_MODULE(xeus_python_comm, m) {
         py::class_<xcomm>(m, "XPythonComm")
             .def(py::init<py::args, py::kwargs>())
@@ -131,27 +136,8 @@ namespace xpyt
             .def_property_readonly("kernel", &xcomm::kernel);
     }
 
-    namespace detail
-    {
-        struct xmock_object
-        {
-        };
-    }
-
     PYBIND11_EMBEDDED_MODULE(xeus_python_kernel, m) {
-        py::class_<detail::xmock_object> _Mock(m, "_Mock");
-
         m.def("register_target", &register_target);
-
-        m.def("get_kernel", [m] () {
-            py::object xeus_python = m.attr("_Mock");
-            py::object kernel = m.attr("_Mock");
-            py::object comm_manager = m.attr("_Mock");
-
-            comm_manager.attr("register_target") = m.attr("register_target");
-            kernel.attr("comm_manager") = comm_manager;
-            xeus_python.attr("kernel") = kernel;
-            return xeus_python;
-        });
+        m.def("get_kernel", &get_kernel);
     }
 }

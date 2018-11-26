@@ -35,27 +35,29 @@ namespace xpyt
         redirect_output();
         redirect_display();
 
-        // Monkey patching "from ipykernel.comm import Comm"
+        // Monkey patching ipywidgets
         try
         {
+            py::module sys = py::module::import("sys");
+            py::module types = py::module::import("types");
             py::module xeus_python_comm = py::module::import("xeus_python_comm");
-            py::object xpython_comm = xeus_python_comm.attr("XPythonComm");
-            py::module::import("ipykernel.comm").attr("Comm") = xpython_comm;
-        }
-        catch (const std::exception& /*e*/) {}
-        // Monkey patching "from IPython.display import display"
-        try
-        {
-            py::module::import("IPython.display").attr("display") = m_displayhook;
-        }
-        catch (const std::exception& /*e*/) {}
-        // Monkey patching "from IPython import get_ipython"
-        try
-        {
             py::module xeus_python_kernel = py::module::import("xeus_python_kernel");
-            py::module::import("IPython").attr("get_ipython") = xeus_python_kernel.attr("get_kernel");
+            py::module xeus_python_display = py::module::import("xeus_python_display");
+
+            py::object xpython_comm = xeus_python_comm.attr("XPythonComm");
+
+            py::module kernel = types.attr("ModuleType")("kernel");
+            py::setattr(kernel, "Comm", xpython_comm);
+            py::setattr(kernel, "display", m_displayhook);
+            py::setattr(kernel, "clear_output", xeus_python_display.attr("clear_output"));
+            py::setattr(kernel, "register_target", xeus_python_kernel.attr("register_target"));
+            py::setattr(kernel, "get_kernel", xeus_python_kernel.attr("get_kernel"));
+
+            sys.attr("modules")["ipywidgets.widgets.kernel"] = kernel;
         }
-        catch (const std::exception& /*e*/) {}
+        catch (const std::exception& /*e*/)
+        {
+        }
     }
 
     interpreter::~interpreter() {}
