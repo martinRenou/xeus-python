@@ -116,6 +116,23 @@ namespace xpyt
             return kernel_res;
         }
 
+        if (code.size() >= 2 && code[0] == '%')
+        {   
+            kernel_res["status"] = "ok";
+            kernel_res["payload"] = nl::json::array();
+            kernel_res["payload"][0] = nl::json::object({
+                {"data", {
+                    {"text/plain", "magic function " + code.substr(1)}
+                }},
+                {"source", "page"},
+                {"start", 0}
+            });
+            kernel_res["user_expressions"] = nl::json::object();
+
+            return kernel_res;
+
+        }
+
         // Scope guard performing the temporary monkey patching of input and
         // getpass with a function sending input_request messages.
         auto input_guard = input_redirection(allow_stdin);
