@@ -118,12 +118,20 @@ namespace xpyt
 
         if (code.size() >= 2 && code[0] == '%')
         {   
+            py::list magics_line = py::str(code.substr(1)).attr("split")(" ");
+            auto magics_name = py::cast<std::string>(magics_line[0]);
+            auto magics_arg = py::cast<std::string>(magics_line[1]);
+            py::module kernel = get_kernel_module();
+            py::object output = kernel.attr("run_line_magic")("'" + magics_name + "'", magics_arg);
+            
+            //std::string output_str = output.cast<std::string>();
+
             kernel_res["status"] = "ok";
             kernel_res["payload"] = nl::json::array();
             kernel_res["payload"][0] = nl::json::object({
-                {"data", {
-                    {"text/plain", "magic function " + code.substr(1)}
-                }},
+                //{"data", {
+                //    {"text/plain", output_str}
+                //}},
                 {"source", "page"},
                 {"start", 0}
             });
