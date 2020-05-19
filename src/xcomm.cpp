@@ -204,17 +204,21 @@ namespace xpyt
         kernel_module.def("showtraceback", [](py::args, py::kwargs) {});
         kernel_module.def("run_line_magic", [kernel_module](std::string name, std::string arg) {
             if (name == "cd") {
-            py::module magics = py::module::import("IPython.core.magics.osm");
-            py::object osm = magics.attr("OSMagics")();
-            py::object shell = kernel_module.attr("_Mock");
-            shell.attr("db") = py::dict();
-            shell.attr("user_ns") = py::dict("_dh"_a=py::list());
-            osm.attr("shell") = shell;
-            osm.attr("cd")(arg);
+                py::module magics = py::module::import("IPython.core.magics.osm");
+                py::object osm = magics.attr("OSMagics")();
+                py::object shell = kernel_module.attr("_Mock");
+                shell.attr("db") = py::dict();
+                shell.attr("user_ns") = py::dict("_dh"_a=py::list());
+                osm.attr("shell") = shell;
+                auto result = osm.attr("cd")(arg);
+                return result;
+            }
+            PyErr_SetString(PyExc_ValueError, "magics not found");
 
-                
-            return "";}
-            else return "magics not found";});
+            throw py::error_already_set();
+
+    
+            });
 
         kernel_module.def("get_ipython", [kernel_module]() {
             py::object kernel = kernel_module.attr("mock_kernel")();
