@@ -203,16 +203,18 @@ namespace xpyt
         kernel_module.def("enable_gui", [](py::args, py::kwargs) {});
         kernel_module.def("showtraceback", [](py::args, py::kwargs) {});
         kernel_module.def("run_line_magic", [kernel_module](std::string name, std::string arg) {
+            if (name == "cd") {
             py::module magics = py::module::import("IPython.core.magics.osm");
             py::object osm = magics.attr("OSMagics")();
             py::object shell = kernel_module.attr("_Mock");
             shell.attr("db") = py::dict();
             shell.attr("user_ns") = py::dict("_dh"_a=py::list());
             osm.attr("shell") = shell;
-            auto msg = osm.attr("cd")(arg);
+            osm.attr("cd")(arg);
 
                 
-            return msg;});
+            return "";}
+            else return "magics not found";});
 
         kernel_module.def("get_ipython", [kernel_module]() {
             py::object kernel = kernel_module.attr("mock_kernel")();
