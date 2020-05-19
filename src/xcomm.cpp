@@ -23,6 +23,7 @@
 
 #include "xcomm.hpp"
 #include "xutils.hpp"
+#include "xdisplay.hpp"
 
 namespace py = pybind11;
 namespace nl = nlohmann;
@@ -203,19 +204,43 @@ namespace xpyt
         kernel_module.def("enable_gui", [](py::args, py::kwargs) {});
         kernel_module.def("showtraceback", [](py::args, py::kwargs) {});
         kernel_module.def("run_line_magic", [kernel_module](std::string name, std::string arg) {
-            if ((name == "cd") || (name == "pwd") || (name == "env") || (name == "set_env")) {
-                py::module magics = py::module::import("IPython.core.magics.osm");
-                py::object osm = magics.attr("OSMagics")();
-                py::object shell = kernel_module.attr("_Mock");
-                shell.attr("db") = py::dict();
-                shell.attr("user_ns") = py::dict("_dh"_a=py::list());
-                osm.attr("shell") = shell;
-                auto result = osm.attr(py::str(name))(arg);
-                return result;
-            }
-            PyErr_SetString(PyExc_ValueError, "magics not found");
 
-            throw py::error_already_set();
+            // monkey patch pager
+            py::module page_module = py::module("ipy_page");
+            page_module.def("page",  [](py::str data, py::kwargs) {
+                py::module display_module = get_display_module();
+                return display_module.attr("display")(py::dict("text/plain"_a=data), "raw"_a=true);});
+
+            py::module magic_core = py::module::import("IPython.core.magic");
+            py::object magics_manager = magic_core.attr("MagicsManager")();
+            py::object shell = kernel_module.attr("_Mock");
+            shell.attr("db") = py::dict();
+            shell.attr("user_ns") = py::dict("_dh"_a=py::list());
+            shell.attr("magics_manager") = magics_manager;
+            std::string magics_cls;
+            py::module magics_module;
+            if ((name == "cd") || (name == "pwd") || (name == "env") || (name == "set_env")) {
+                magics_module = py::module::import("IPython.core.magics.osm");
+                magics_manager.attr("register")(magics_module.attr("OSMagics"));
+                magics_cls = "OSMagics";
+            }
+            else if (name == "magic") {
+                magics_module = py::module::import("IPython.core.magics.basic");
+                magics_module.attr("page") = page_module;
+                magics_manager.attr("register")(magics_module.attr("BasicMagics"));
+                magics_cls = "BasicMagics";
+            }
+            else
+            {
+                PyErr_SetString(PyExc_ValueError, "magics not found");
+                throw py::error_already_set();
+            }
+
+
+            py::object magics_inst = magics_module.attr(py::str(magics_cls))();
+            magics_inst.attr("shell") = shell;
+            auto result = magics_inst.attr(py::str(name))(arg);
+            return result;
 
     
             });
