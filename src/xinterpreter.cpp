@@ -128,7 +128,7 @@ namespace xpyt
 
             py::module kernel = get_kernel_module();
             try {
-                py::object output = kernel.attr("run_line_magic")(magics_name, magics_arg);
+                py::object output = kernel.attr("get_ipython")().attr("run_line_magic")(magics_name, magics_arg);
 
 
                 kernel_res["status"] = "ok";
