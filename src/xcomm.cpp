@@ -212,13 +212,14 @@ namespace xpyt
                 return display_module.attr("display")(py::dict("text/plain"_a=data), "raw"_a=true);});
 
             py::module magic_core = py::module::import("IPython.core.magic");
+            py::module magics_module = py::module::import("IPython.core.magics");
+
             py::object magics_manager = magic_core.attr("MagicsManager")();
             py::object shell = kernel_module.attr("_Mock");
             shell.attr("db") = py::dict();
             shell.attr("user_ns") = py::dict("_dh"_a=py::list());
             shell.attr("magics_manager") = magics_manager;
             std::string magics_cls;
-            py::module magics_module = py::module::import("IPython.core.magics");
             py::object osm_magics_inst =  magics_module.attr("OSMagics")();
             py::object basic_magics_inst =  magics_module.attr("BasicMagics")();
             osm_magics_inst.attr("shell") = shell;
@@ -226,20 +227,14 @@ namespace xpyt
             magics_manager.attr("register")(osm_magics_inst);
             magics_manager.attr("register")(basic_magics_inst);
             py::object magics_inst;
+            py::object magic_method = magics_manager.attr("magics")["line"].attr("get")(name);
 
-            if ((name == "cd") || (name == "pwd") || (name == "env") || (name == "set_env")) {
-                magics_inst = osm_magics_inst;
-            }
-            else if (name == "magic") {
-                magics_inst = basic_magics_inst;
-            }
-            else
-            {
+            if (magic_method.is_none()) {
                 PyErr_SetString(PyExc_ValueError, "magics not found");
                 throw py::error_already_set();
             }
 
-            auto result = magics_inst.attr(py::str(name))(arg);
+            auto result = magic_method(arg);
             return result;
 
     
