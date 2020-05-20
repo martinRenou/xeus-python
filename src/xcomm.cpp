@@ -199,34 +199,29 @@ namespace xpyt
             .def(py::init<>())
             .def_property_readonly("_parent_header", &xmock_kernel::parent_header);
 
+        //py::class_<detail::xmock_object> shell(kernel_module, "_Shell");
+        py::object shell = _Mock;
+        shell.attr("db") = py::dict();
+        shell.attr("user_ns") = py::dict("_dh"_a=py::list());
+        py::module magic_core = py::module::import("IPython.core.magic");
+        py::module magics_module = py::module::import("IPython.core.magics");
+
+        py::object magics_manager = magic_core.attr("MagicsManager")();
+        shell.attr("magics_manager") = magics_manager;
+
+        py::object osm_magics_inst =  magics_module.attr("OSMagics")();
+        py::object basic_magics_inst =  magics_module.attr("BasicMagics")();
+        osm_magics_inst.attr("shell") = shell;
+        basic_magics_inst.attr("shell") = shell;
+        magics_manager.attr("register")(osm_magics_inst);
+        magics_manager.attr("register")(basic_magics_inst);
+
         kernel_module.def("register_target", &register_target);
         kernel_module.def("register_post_execute", [](py::args, py::kwargs) {});
         kernel_module.def("enable_gui", [](py::args, py::kwargs) {});
         kernel_module.def("showtraceback", [](py::args, py::kwargs) {});
-        kernel_module.def("run_line_magic", [kernel_module](std::string name, std::string arg) {
+        kernel_module.def("run_line_magic", [magics_manager](std::string name, std::string arg) {
 
-            // monkey patch pager
-            py::module page_module = py::module("ipy_page");
-            page_module.def("page",  [](py::str data, py::kwargs) {
-                py::module display_module = get_display_module();
-                return display_module.attr("display")(py::dict("text/plain"_a=data), "raw"_a=true);});
-
-            py::module magic_core = py::module::import("IPython.core.magic");
-            py::module magics_module = py::module::import("IPython.core.magics");
-
-            py::object magics_manager = magic_core.attr("MagicsManager")();
-            py::object shell = kernel_module.attr("_Mock");
-            shell.attr("db") = py::dict();
-            shell.attr("user_ns") = py::dict("_dh"_a=py::list());
-            shell.attr("magics_manager") = magics_manager;
-            std::string magics_cls;
-            py::object osm_magics_inst =  magics_module.attr("OSMagics")();
-            py::object basic_magics_inst =  magics_module.attr("BasicMagics")();
-            osm_magics_inst.attr("shell") = shell;
-            basic_magics_inst.attr("shell") = shell;
-            magics_manager.attr("register")(osm_magics_inst);
-            magics_manager.attr("register")(basic_magics_inst);
-            py::object magics_inst;
             py::object magic_method = magics_manager.attr("magics")["line"].attr("get")(name);
 
             if (magic_method.is_none()) {
