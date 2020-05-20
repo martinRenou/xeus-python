@@ -218,17 +218,20 @@ namespace xpyt
             shell.attr("user_ns") = py::dict("_dh"_a=py::list());
             shell.attr("magics_manager") = magics_manager;
             std::string magics_cls;
-            py::module magics_module;
+            py::module magics_module = py::module::import("IPython.core.magics");
+            py::object osm_magics_inst =  magics_module.attr("OSMagics")();
+            py::object basic_magics_inst =  magics_module.attr("BasicMagics")();
+            osm_magics_inst.attr("shell") = shell;
+            basic_magics_inst.attr("shell") = shell;
+            magics_manager.attr("register")(osm_magics_inst);
+            magics_manager.attr("register")(basic_magics_inst);
+            py::object magics_inst;
+
             if ((name == "cd") || (name == "pwd") || (name == "env") || (name == "set_env")) {
-                magics_module = py::module::import("IPython.core.magics.osm");
-                magics_manager.attr("register")(magics_module.attr("OSMagics"));
-                magics_cls = "OSMagics";
+                magics_inst = osm_magics_inst;
             }
             else if (name == "magic") {
-                magics_module = py::module::import("IPython.core.magics.basic");
-                magics_module.attr("page") = page_module;
-                magics_manager.attr("register")(magics_module.attr("BasicMagics"));
-                magics_cls = "BasicMagics";
+                magics_inst = basic_magics_inst;
             }
             else
             {
@@ -236,9 +239,6 @@ namespace xpyt
                 throw py::error_already_set();
             }
 
-
-            py::object magics_inst = magics_module.attr(py::str(magics_cls))();
-            magics_inst.attr("shell") = shell;
             auto result = magics_inst.attr(py::str(name))(arg);
             return result;
 
