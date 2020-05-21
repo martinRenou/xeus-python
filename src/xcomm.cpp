@@ -307,8 +307,6 @@ namespace xpyt
         xeus_python.attr("db") = py::dict();
         xeus_python.attr("hooks") = kernel_module.attr("Hooks");
         xeus_python.attr("user_ns") = py::dict("_dh"_a=py::list());
-        //xeus_python.attr("run_line_magic") = kernel_module.attr("run_line_magic");
-        //xeus_python.attr("run_cell_magic") = kernel_module.attr("run_cell_magic");
         xeus_python.attr("system") = kernel_module.attr("system");
         xeus_python.attr("getoutput") = kernel_module.attr("getoutput");
         init_magics(xeus_python);
