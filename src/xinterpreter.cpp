@@ -78,6 +78,9 @@ namespace xpyt
 #if PY_MAJOR_VERSION >= 3
         sys.attr("modules")["linecache"] = get_linecache_module();
 #endif
+
+        // add get_ipython to global namespace
+        exec(py::str("from IPython.core.getipython import get_ipython"));
     }
 
     interpreter::~interpreter()
@@ -116,6 +119,8 @@ namespace xpyt
             return kernel_res;
         }
 
+        std::string code_copy = code;
+
         if (code.size() >= 2 && code[0] == '%')
         {   
             py::list magics_line = py::str(code.substr(1)).attr("split")(" ");
@@ -126,40 +131,8 @@ namespace xpyt
             else
                 magics_arg = "";
 
-            py::module kernel = get_kernel_module();
-            try {
-                py::object output = kernel.attr("get_ipython")().attr("run_line_magic")(magics_name, magics_arg);
-
-
-                kernel_res["status"] = "ok";
-                kernel_res["payload"] = nl::json::array();
-                kernel_res["payload"][0] = nl::json::object({
-                    {"data", {
-                        {"text/plain", py::str(output)}
-                    }},
-                    {"source", "page"},
-                    {"start", 0}
-                });
-                kernel_res["user_expressions"] = nl::json::object();
-
-            } catch (py::error_already_set & e)
-            {
-
-                std::string evalue = e.what();
-                std::string ename = py::str(e.type().attr("__name__"));
-                publish_execution_error(ename, evalue, {evalue});
-                //if (!silent)
-                //{
-                //}
-
-                kernel_res["status"] = "error";
-                kernel_res["ename"] = ename;
-                kernel_res["evalue"] = evalue;
-                kernel_res["traceback"] = {evalue};
-            }
-
-            
-            return kernel_res;
+            code_copy = "get_ipython().run_line_magic('{}', '{}')"_s.format(
+                magics_name, magics_arg);
 
         }
 
@@ -174,7 +147,7 @@ namespace xpyt
             py::module builtins = py::module::import(XPYT_BUILTINS);
 
             // Parse code to AST
-            py::object code_ast = ast.attr("parse")(code, "<string>", "exec");
+            py::object code_ast = ast.attr("parse")(code_copy, "<string>", "exec");
             py::list expressions = code_ast.attr("body");
 
             std::string filename = get_cell_tmp_file(code);
