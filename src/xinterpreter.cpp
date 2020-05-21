@@ -119,22 +119,9 @@ namespace xpyt
             return kernel_res;
         }
 
-        std::string code_copy = code;
-
-        if (code.size() >= 2 && code[0] == '%')
-        {   
-            py::list magics_line = py::str(code.substr(1)).attr("split")(" ");
-            auto magics_name = py::cast<std::string>(magics_line[0]);
-            std::string magics_arg;
-            if (py::len(magics_line) > 1) 
-                magics_arg = py::cast<std::string>(magics_line[1]);
-            else
-                magics_arg = "";
-
-            code_copy = "get_ipython().run_line_magic('{}', '{}')"_s.format(
-                magics_name, magics_arg);
-
-        }
+        py::module input_transformers = py::module::import("IPython.core.inputtransformer2");
+        py::object transformer_manager = input_transformers.attr("TransformerManager")();
+        py::str code_copy = transformer_manager.attr("transform_cell")(code);
 
         // Scope guard performing the temporary monkey patching of input and
         // getpass with a function sending input_request messages.
