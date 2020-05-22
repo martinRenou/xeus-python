@@ -99,6 +99,12 @@ class XeusPythonTests(jupyter_kernel_test.KernelTests):
         reply, output_msgs = self.execute_helper(code="%missing_magic")
         self.assertRegex(output_msgs[0]['content']['evalue'], "magics not found")
 
+    def test_xeus_python_load_ext_magic(self):
+        """Test loading extensions"""
+        reply, output_msgs = self.execute_helper(code="%load_ext example_magic")
+        reply, output_msgs = self.execute_helper(code="%abra line")
+        self.assertEqual(reply['content']['status'], 'ok')
+
     def test_xeus_python_stdout(self):
         reply, output_msgs = self.execute_helper(code='print(3)')
         self.assertEqual(output_msgs[0]['msg_type'], 'stream')
