@@ -253,6 +253,17 @@ namespace xpyt
                 return magic_method(arg, body);
             }
 
+            void register_magic_function(py::object func, std::string magic_kind, py::object magic_name)
+            {
+                magics_manager.attr("register_function")(
+                    func, "magic_kind"_a=magic_kind, "magic_name"_a=magic_name);
+            }
+
+            void register_magics(py::args args)
+            {
+                magics_manager.attr("register")(*args);
+            }
+
         };
 
     }
@@ -306,8 +317,16 @@ namespace xpyt
         kernel_module.def("getoutput", [ipy_process](py::str cmd){return ipy_process.attr("getoutput")(cmd).attr("splitlines")();});
 
         py::module::import("IPython.core.interactiveshell").attr("InteractiveShellABC").attr("register")(XInteractiveShell);
-        XInteractiveShell.def("run_line_magic", &detail::XInteractiveShell::run_line_magic);
-        XInteractiveShell.def("run_cell_magic", &detail::XInteractiveShell::run_cell_magic);
+        XInteractiveShell
+            .def("run_line_magic", &detail::XInteractiveShell::run_line_magic)
+            .def("run_cell_magic", &detail::XInteractiveShell::run_cell_magic)
+            .def("register_magic_function",
+                &detail::XInteractiveShell::register_magic_function,
+                "Register magic function",
+                py::arg("func"),
+                py::arg("magic_kind")="line",
+                py::arg("magic_name")=py::none())
+            .def("register_magics", &detail::XInteractiveShell::register_magics);
 
         hooks.attr("show_in_pager") = kernel_module.attr("show_in_pager");
 
@@ -329,8 +348,6 @@ namespace xpyt
         xeus_python.attr("system") = kernel_module.attr("system");
         xeus_python.attr("getoutput") = kernel_module.attr("getoutput");
         init_magics(xeus_python);
-        xeus_python.attr("register_magic_function") = xeus_python.attr("magics_manager").attr("register_function");
-        xeus_python.attr("register_magics") = xeus_python.attr("magics_manager").attr("register");
 
         kernel_module.def("get_ipython", [xeus_python]() {
             return xeus_python;
