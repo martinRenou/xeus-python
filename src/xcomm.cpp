@@ -214,6 +214,47 @@ namespace xpyt
             hooks_object() {}
         };
 
+        class XInteractiveShell {
+
+        protected:
+
+
+        public:
+
+            py::object magics_manager;
+
+            XInteractiveShell() {}
+
+            py::object run_line_magic(std::string name, std::string arg)
+            {
+
+                py::object magic_method = magics_manager
+                    .attr("magics")["line"]
+                    .attr("get")(name);
+
+                if (magic_method.is_none()) {
+                    PyErr_SetString(PyExc_ValueError, "magics not found");
+                    throw py::error_already_set();
+                }
+
+                return magic_method(arg);
+    
+            }
+
+            py::object run_cell_magic(std::string name, std::string arg, std::string body)
+            {
+                py::object magic_method = magics_manager.attr("magics")["cell"].attr("get")(name);
+
+                if (magic_method.is_none()) {
+                    PyErr_SetString(PyExc_ValueError, "cell magics not found");
+                    throw py::error_already_set();
+                }
+
+                return magic_method(arg, body);
+            }
+
+        };
+
     }
 
     struct xmock_kernel
@@ -229,12 +270,16 @@ namespace xpyt
      * kernel module *
      *****************/
 
+
     py::module get_kernel_module_impl()
     {
         py::module kernel_module = py::module("kernel");
 
-        py::class_<detail::xmock_object> _Mock(kernel_module, "_Mock", py::dynamic_attr());
-        _Mock.def(py::init<>());
+        py::class_<detail::xmock_object> _Mock(kernel_module, "_Mock");
+        py::class_<detail::XInteractiveShell> XInteractiveShell(
+            kernel_module, "XInteractiveShell", py::dynamic_attr());
+        XInteractiveShell.def(py::init<>())
+            .def_readwrite("magics_manager", &detail::XInteractiveShell::magics_manager);
         py::class_<xcomm>(kernel_module, "Comm")
             .def(py::init<py::args, py::kwargs>())
             .def("close", &xcomm::close)
@@ -260,35 +305,9 @@ namespace xpyt
         kernel_module.def("system", [ipy_process](py::str cmd) {ipy_process.attr("system")(cmd);});
         kernel_module.def("getoutput", [ipy_process](py::str cmd){return ipy_process.attr("getoutput")(cmd).attr("splitlines")();});
 
-        py::module::import("IPython.core.interactiveshell").attr("InteractiveShellABC").attr("register")(_Mock);
-        _Mock.def("run_line_magic", [](py::object self, std::string name, std::string arg) {
-
-            py::object magic_method = self.attr("magics_manager").attr("magics")["line"].attr("get")(name);
-
-            if (magic_method.is_none()) {
-                PyErr_SetString(PyExc_ValueError, "magics not found");
-                throw py::error_already_set();
-            }
-
-            auto result = magic_method(arg);
-            return result;
-    
-            });
-
-        _Mock.def("run_cell_magic", [](py::object self, std::string name, std::string line, std::string cell) {
-
-            py::object magic_method = self.attr("magics_manager").attr("magics")["cell"].attr("get")(name);
-
-            if (magic_method.is_none()) {
-                PyErr_SetString(PyExc_ValueError, "cell magics not found");
-                throw py::error_already_set();
-            }
-
-            auto result = magic_method(line, cell);
-            return result;
-    
-            });
-
+        py::module::import("IPython.core.interactiveshell").attr("InteractiveShellABC").attr("register")(XInteractiveShell);
+        XInteractiveShell.def("run_line_magic", &detail::XInteractiveShell::run_line_magic);
+        XInteractiveShell.def("run_cell_magic", &detail::XInteractiveShell::run_cell_magic);
 
         hooks.attr("show_in_pager") = kernel_module.attr("show_in_pager");
 
@@ -298,7 +317,7 @@ namespace xpyt
         comm_manager.attr("register_target") = kernel_module.attr("register_target");
         kernel.attr("comm_manager") = comm_manager;
 
-        py::object xeus_python =  kernel_module.attr("_Mock")();
+        py::object xeus_python =  kernel_module.attr("XInteractiveShell")();
         xeus_python.attr("register_post_execute") = kernel_module.attr("register_post_execute");
         xeus_python.attr("enable_gui") = kernel_module.attr("enable_gui");
         xeus_python.attr("showtraceback") = kernel_module.attr("showtraceback");
