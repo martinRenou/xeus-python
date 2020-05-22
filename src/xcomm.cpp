@@ -212,6 +212,11 @@ namespace xpyt
         struct hooks_object
         {
             hooks_object() {}
+            static void show_in_pager(py::str data, py::kwargs)
+            {
+                xpyt::xdisplay(py::dict("text/plain"_a=data), {}, {}, py::dict(), py::none(), py::none(), false, true);
+            }
+
         };
 
         class XInteractiveShell {
@@ -223,7 +228,11 @@ namespace xpyt
 
             py::object magics_manager;
 
-            XInteractiveShell() {}
+            hooks_object hooks;
+
+            XInteractiveShell() {
+                hooks = hooks_object();
+            }
 
             py::object run_line_magic(std::string name, std::string arg)
             {
@@ -289,8 +298,11 @@ namespace xpyt
         py::class_<detail::xmock_object> _Mock(kernel_module, "_Mock");
         py::class_<detail::XInteractiveShell> XInteractiveShell(
             kernel_module, "XInteractiveShell", py::dynamic_attr());
+        py::class_<detail::hooks_object>(kernel_module, "Hooks")
+            .def_static("show_in_pager", &detail::hooks_object::show_in_pager);
         XInteractiveShell.def(py::init<>())
-            .def_readwrite("magics_manager", &detail::XInteractiveShell::magics_manager);
+            .def_readwrite("magics_manager", &detail::XInteractiveShell::magics_manager)
+            .def_readonly("hooks", &detail::XInteractiveShell::hooks);
         py::class_<xcomm>(kernel_module, "Comm")
             .def(py::init<py::args, py::kwargs>())
             .def("close", &xcomm::close)
@@ -302,7 +314,6 @@ namespace xpyt
         py::class_<xmock_kernel>(kernel_module, "mock_kernel", py::dynamic_attr())
             .def(py::init<>())
             .def_property_readonly("_parent_header", &xmock_kernel::parent_header);
-        py::class_<detail::hooks_object> hooks(kernel_module, "Hooks");
 
 
         kernel_module.def("register_target", &register_target);
@@ -310,7 +321,6 @@ namespace xpyt
         kernel_module.def("enable_gui", [](py::args, py::kwargs) {});
         kernel_module.def("observe", [](py::args, py::kwargs) {});
         kernel_module.def("showtraceback", [](py::args, py::kwargs) {});
-        kernel_module.def("show_in_pager", [](py::str data, py::kwargs) {xpyt::xdisplay(py::dict("text/plain"_a=data), {}, {}, py::dict(), py::none(), py::none(), false, true);});
 
         py::module ipy_process = py::module::import("IPython.utils.process");
         kernel_module.def("system", [ipy_process](py::str cmd) {ipy_process.attr("system")(cmd);});
@@ -328,9 +338,6 @@ namespace xpyt
                 py::arg("magic_name")=py::none())
             .def("register_magics", &detail::XInteractiveShell::register_magics);
 
-        hooks.attr("show_in_pager") = kernel_module.attr("show_in_pager");
-
-
         py::object kernel = kernel_module.attr("mock_kernel")();
         py::object comm_manager = kernel_module.attr("_Mock");
         comm_manager.attr("register_target") = kernel_module.attr("register_target");
@@ -343,7 +350,6 @@ namespace xpyt
         xeus_python.attr("kernel") = kernel;
         xeus_python.attr("observe") = kernel_module.attr("observe"); 
         xeus_python.attr("db") = py::dict();
-        xeus_python.attr("hooks") = kernel_module.attr("Hooks");
         xeus_python.attr("user_ns") = py::dict("_dh"_a=py::list());
         xeus_python.attr("system") = kernel_module.attr("system");
         xeus_python.attr("getoutput") = kernel_module.attr("getoutput");
