@@ -1,10 +1,12 @@
 #include "pybind11/pybind11.h"
+#include "xdisplay.hpp"
 
 #ifdef __GNUC__
     #pragma GCC diagnostic ignored "-Wattributes"
 #endif
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 namespace xpyt 
 {
@@ -14,7 +16,7 @@ namespace xpyt
         hooks_object() {}
         static inline void show_in_pager(py::str data, py::kwargs)
         {
-            xpyt::xdisplay(py::dict("text/plain"_a=data), {}, {}, py::dict(), py::none(), py::none(), false, true);
+            xdisplay(py::dict("text/plain"_a=data), {}, {}, py::dict(), py::none(), py::none(), false, true);
         }
 
     };

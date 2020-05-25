@@ -1,4 +1,5 @@
-#include "xeus/xinteractiveshell.hpp"
+#include "xinteractiveshell.hpp"
+#include "xdisplay.hpp"
 
 using namespace pybind11::literals;
 namespace py = pybind11;

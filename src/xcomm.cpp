@@ -15,7 +15,6 @@
 
 #include "xeus/xcomm.hpp"
 #include "xeus/xinterpreter.hpp"
-#include "xeus/xinteractiveshell.hpp"
 
 #include "pybind11_json/pybind11_json.hpp"
 
@@ -25,6 +24,7 @@
 #include "xcomm.hpp"
 #include "xutils.hpp"
 #include "xdisplay.hpp"
+#include "xinteractiveshell.hpp"
 
 namespace py = pybind11;
 namespace nl = nlohmann;
@@ -193,8 +193,8 @@ namespace xpyt
         py::class_<XInteractiveShell> XInteractiveShell(
             kernel_module, "XInteractiveShell", py::dynamic_attr());
 
-        py::class_<detail::hooks_object>(kernel_module, "Hooks")
-            .def_static("show_in_pager", &detail::hooks_object::show_in_pager);
+        py::class_<hooks_object>(kernel_module, "Hooks")
+            .def_static("show_in_pager", &hooks_object::show_in_pager);
 
         XInteractiveShell.def(py::init<>())
             .def_readwrite("magics_manager", &XInteractiveShell::magics_manager)
