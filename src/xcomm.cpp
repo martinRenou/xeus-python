@@ -324,8 +324,10 @@ namespace xpyt
         py::class_<detail::xmock_object> _Mock(kernel_module, "_Mock");
         py::class_<detail::XInteractiveShell> XInteractiveShell(
             kernel_module, "XInteractiveShell", py::dynamic_attr());
+
         py::class_<detail::hooks_object>(kernel_module, "Hooks")
             .def_static("show_in_pager", &detail::hooks_object::show_in_pager);
+
         XInteractiveShell.def(py::init<>())
             .def_readwrite("magics_manager", &detail::XInteractiveShell::magics_manager)
             .def_readonly("extension_manager", &detail::XInteractiveShell::extension_manager)
@@ -333,24 +335,7 @@ namespace xpyt
             .def_readonly("db", &detail::XInteractiveShell::db)
             .def_readonly("user_ns", &detail::XInteractiveShell::user_ns)
             .def_readonly("builtin_trap", &detail::XInteractiveShell::builtin_trap)
-            .def_readonly("ipython_dir", &detail::XInteractiveShell::ipython_dir);
-        py::class_<xcomm>(kernel_module, "Comm")
-            .def(py::init<py::args, py::kwargs>())
-            .def("close", &xcomm::close)
-            .def("send", &xcomm::send)
-            .def("on_msg", &xcomm::on_msg)
-            .def("on_close", &xcomm::on_close)
-            .def_property_readonly("comm_id", &xcomm::comm_id)
-            .def_property_readonly("kernel", &xcomm::kernel);
-        py::class_<xmock_kernel>(kernel_module, "mock_kernel", py::dynamic_attr())
-            .def(py::init<>())
-            .def_property_readonly("_parent_header", &xmock_kernel::parent_header);
-
-
-        kernel_module.def("register_target", &register_target);
-
-        py::module::import("IPython.core.interactiveshell").attr("InteractiveShellABC").attr("register")(XInteractiveShell);
-        XInteractiveShell
+            .def_readonly("ipython_dir", &detail::XInteractiveShell::ipython_dir)
             .def("run_line_magic", &detail::XInteractiveShell::run_line_magic)
             .def("run_cell_magic", &detail::XInteractiveShell::run_cell_magic)
             .def("system", &detail::XInteractiveShell::system)
@@ -367,12 +352,30 @@ namespace xpyt
                 py::arg("magic_name")=py::none())
             .def("register_magics", &detail::XInteractiveShell::register_magics);
 
+        py::module::import("IPython.core.interactiveshell").attr("InteractiveShellABC").attr("register")(XInteractiveShell);
+
+        py::class_<xcomm>(kernel_module, "Comm")
+            .def(py::init<py::args, py::kwargs>())
+            .def("close", &xcomm::close)
+            .def("send", &xcomm::send)
+            .def("on_msg", &xcomm::on_msg)
+            .def("on_close", &xcomm::on_close)
+            .def_property_readonly("comm_id", &xcomm::comm_id)
+            .def_property_readonly("kernel", &xcomm::kernel);
+        py::class_<xmock_kernel>(kernel_module, "mock_kernel", py::dynamic_attr())
+            .def(py::init<>())
+            .def_property_readonly("_parent_header", &xmock_kernel::parent_header);
+
+
+        kernel_module.def("register_target", &register_target);
+
         py::object kernel = kernel_module.attr("mock_kernel")();
         py::object comm_manager = kernel_module.attr("_Mock");
         comm_manager.attr("register_target") = kernel_module.attr("register_target");
         kernel.attr("comm_manager") = comm_manager;
 
         py::object xeus_python =  kernel_module.attr("XInteractiveShell")();
+        xeus_python.attr("kernel") = kernel;
 
         kernel_module.def("get_ipython", [xeus_python]() {
             return xeus_python;
