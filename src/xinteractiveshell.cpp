@@ -39,7 +39,10 @@ namespace xpyt
            "set_env"_a=line_magics["set_env"],
            "pwd"_a=line_magics["pwd"],
            "magic"_a=line_magics["magic"],
-           "load_ext"_a=line_magics["load_ext"]
+           "load_ext"_a=line_magics["load_ext"],
+           "pushd"_a=line_magics["pushd"],
+           "popd"_a=line_magics["popd"],
+           "dirs"_a=line_magics["dirs"]
         );
         cell_magics = py::dict(
             "writefile"_a=cell_magics["writefile"]);
@@ -56,6 +59,8 @@ namespace xpyt
         m_ipy_process = py::module::import("IPython.utils.process");
         m_db = py::dict();
         m_user_ns = py::dict("_dh"_a=py::list());
+        dir_stack = py::list();
+        home_dir = os_module.attr("path").attr("expanduser")("~");
         init_magics();
     }
 

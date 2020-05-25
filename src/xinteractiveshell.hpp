@@ -23,16 +23,18 @@ namespace xpyt
     {
 
     public:
-
         // default constructor
         xinteractive_shell();
+
+        //required by pushd
+        py::list dir_stack;
+        py::str home_dir;
 
         // mock required methods
         void register_post_execute(py::args, py::kwargs) {};
         void enable_gui(py::args, py::kwargs) {};
         void observe(py::args, py::kwargs) {};
         void showtraceback(py::args, py::kwargs) {};
-
 
         // run system commands
         py::object system(py::str cmd);
