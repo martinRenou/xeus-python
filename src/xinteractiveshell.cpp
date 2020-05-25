@@ -42,10 +42,16 @@ namespace xpyt
            "load_ext"_a=line_magics["load_ext"],
            "pushd"_a=line_magics["pushd"],
            "popd"_a=line_magics["popd"],
-           "dirs"_a=line_magics["dirs"]
+           "dirs"_a=line_magics["dirs"],
+           "dhist"_a=line_magics["dhist"],
+           "sx"_a=line_magics["sx"],
+           "system"_a=line_magics["system"],
+           "bookmark"_a=line_magics["bookmark"]
         );
         cell_magics = py::dict(
-            "writefile"_a=cell_magics["writefile"]);
+            "writefile"_a=cell_magics["writefile"],
+            "sx"_a=cell_magics["sx"],
+            "system"_a=cell_magics["system"]);
 
         m_magics_manager.attr("magics") = py::dict(
            "line"_a=line_magics,
