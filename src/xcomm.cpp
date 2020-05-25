@@ -23,11 +23,11 @@
 
 #include "xcomm.hpp"
 #include "xutils.hpp"
-#include "xdisplay.hpp"
 #include "xinteractiveshell.hpp"
 
 namespace py = pybind11;
 namespace nl = nlohmann;
+
 namespace xpyt
 {
     /*********************
@@ -166,14 +166,13 @@ namespace xpyt
     {
         struct xmock_object
         {
-            xmock_object() {}
         };
     }
-
 
     struct xmock_kernel
     {
         xmock_kernel() {}
+
         inline py::object parent_header() const
         {
             return py::dict(py::arg("header")=xeus::get_interpreter().parent_header().get<py::object>());
@@ -183,7 +182,6 @@ namespace xpyt
     /*****************
      * kernel module *
      *****************/
-
 
     py::module get_kernel_module_impl()
     {
@@ -233,7 +231,6 @@ namespace xpyt
         py::class_<xmock_kernel>(kernel_module, "mock_kernel", py::dynamic_attr())
             .def(py::init<>())
             .def_property_readonly("_parent_header", &xmock_kernel::parent_header);
-
 
         kernel_module.def("register_target", &register_target);
 

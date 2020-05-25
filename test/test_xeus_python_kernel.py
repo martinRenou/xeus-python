@@ -9,7 +9,6 @@
 #############################################################################
 
 import tempfile
-from textwrap import dedent
 import unittest
 import jupyter_kernel_test
 

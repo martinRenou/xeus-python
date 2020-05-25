@@ -13,10 +13,6 @@
 
 #include "pybind11/pybind11.h"
 
-#ifdef __GNUC__
-    #pragma GCC diagnostic ignored "-Wattributes"
-#endif
-
 namespace py = pybind11;
 
 namespace xpyt
