@@ -15,6 +15,7 @@
 
 #include "xeus/xcomm.hpp"
 #include "xeus/xinterpreter.hpp"
+#include "xeus/xinteractiveshell.hpp"
 
 #include "pybind11_json/pybind11_json.hpp"
 
@@ -27,7 +28,6 @@
 
 namespace py = pybind11;
 namespace nl = nlohmann;
-using namespace pybind11::literals;
 namespace xpyt
 {
     /*********************
@@ -168,145 +168,8 @@ namespace xpyt
         {
             xmock_object() {}
         };
-
-        struct hooks_object
-        {
-            hooks_object() {}
-            static void show_in_pager(py::str data, py::kwargs)
-            {
-                xpyt::xdisplay(py::dict("text/plain"_a=data), {}, {}, py::dict(), py::none(), py::none(), false, true);
-            }
-
-        };
-
-        class XInteractiveShell {
-
-        private:
-            py::module _ipy_process;
-            py::module _magic_core;
-            py::module _magics_module;
-            py::module _extension_module;
-
-        public:
-            //required by cd magic and others
-            py::dict db;
-            py::dict user_ns;
-
-            //required by extension_manager
-            py::object builtin_trap;
-            py::str ipython_dir;
-
-            py::object magics_manager;
-            py::object extension_manager;
-
-            hooks_object hooks;
-
-            void register_post_execute(py::args, py::kwargs) {};
-            void enable_gui(py::args, py::kwargs) {};
-            void observe(py::args, py::kwargs) {};
-            void showtraceback(py::args, py::kwargs) {};
-
-            void init_magics() {
-                _magic_core = py::module::import("IPython.core.magic");
-                _magics_module = py::module::import("IPython.core.magics");
-                _extension_module = py::module::import("IPython.core.extensions");
-
-                magics_manager = _magic_core.attr("MagicsManager")("shell"_a=this);
-                extension_manager = _extension_module.attr("ExtensionManager")("shell"_a=this);
-
-                //shell features required by extension manager
-                builtin_trap = py::module::import("contextlib").attr("nullcontext")();
-                ipython_dir = "";
-
-                py::object osm_magics =  _magics_module.attr("OSMagics");
-                py::object basic_magics =  _magics_module.attr("BasicMagics");
-                py::object user_magics =  _magics_module.attr("UserMagics");
-                py::object extension_magics =  _magics_module.attr("ExtensionMagics");
-                magics_manager.attr("register")(osm_magics);
-                magics_manager.attr("register")(basic_magics);
-                magics_manager.attr("register")(user_magics);
-                magics_manager.attr("register")(extension_magics);
-                magics_manager.attr("user_magics") = user_magics("shell"_a=this);
-
-                //select magics supported by xeus-python
-                auto line_magics = magics_manager.attr("magics")["line"];
-                auto cell_magics = magics_manager.attr("magics")["cell"];
-                line_magics = py::dict(
-                   "cd"_a=line_magics["cd"],
-                   "env"_a=line_magics["env"],
-                   "set_env"_a=line_magics["set_env"],
-                   "pwd"_a=line_magics["pwd"],
-                   "magic"_a=line_magics["magic"],
-                   "load_ext"_a=line_magics["load_ext"]
-                );
-                cell_magics = py::dict(
-                    "writefile"_a=cell_magics["writefile"]);
-
-                magics_manager.attr("magics") = py::dict(
-                   "line"_a=line_magics,
-                   "cell"_a=cell_magics);
-            }
-
-
-            XInteractiveShell() {
-                hooks = hooks_object();
-                _ipy_process = py::module::import("IPython.utils.process");
-                db = py::dict();
-                user_ns = py::dict("_dh"_a=py::list());
-                init_magics();
-            }
-
-            py::object system(py::str cmd) {
-                return _ipy_process.attr("system")(cmd);
-            }
-
-            py::object getoutput(py::str cmd) {
-                auto stream = _ipy_process.attr("getoutput")(cmd);
-                return stream.attr("splitlines")();
-            }
-
-            py::object run_line_magic(std::string name, std::string arg)
-            {
-
-                py::object magic_method = magics_manager
-                    .attr("magics")["line"]
-                    .attr("get")(name);
-
-                if (magic_method.is_none()) {
-                    PyErr_SetString(PyExc_ValueError, "magics not found");
-                    throw py::error_already_set();
-                }
-
-                return magic_method(arg);
-    
-            }
-
-            py::object run_cell_magic(std::string name, std::string arg, std::string body)
-            {
-                py::object magic_method = magics_manager.attr("magics")["cell"].attr("get")(name);
-
-                if (magic_method.is_none()) {
-                    PyErr_SetString(PyExc_ValueError, "cell magics not found");
-                    throw py::error_already_set();
-                }
-
-                return magic_method(arg, body);
-            }
-
-            void register_magic_function(py::object func, std::string magic_kind, py::object magic_name)
-            {
-                magics_manager.attr("register_function")(
-                    func, "magic_kind"_a=magic_kind, "magic_name"_a=magic_name);
-            }
-
-            void register_magics(py::args args)
-            {
-                magics_manager.attr("register")(*args);
-            }
-
-        };
-
     }
+
 
     struct xmock_kernel
     {
@@ -327,35 +190,35 @@ namespace xpyt
         py::module kernel_module = py::module("kernel");
 
         py::class_<detail::xmock_object> _Mock(kernel_module, "_Mock");
-        py::class_<detail::XInteractiveShell> XInteractiveShell(
+        py::class_<XInteractiveShell> XInteractiveShell(
             kernel_module, "XInteractiveShell", py::dynamic_attr());
 
         py::class_<detail::hooks_object>(kernel_module, "Hooks")
             .def_static("show_in_pager", &detail::hooks_object::show_in_pager);
 
         XInteractiveShell.def(py::init<>())
-            .def_readwrite("magics_manager", &detail::XInteractiveShell::magics_manager)
-            .def_readonly("extension_manager", &detail::XInteractiveShell::extension_manager)
-            .def_readonly("hooks", &detail::XInteractiveShell::hooks)
-            .def_readonly("db", &detail::XInteractiveShell::db)
-            .def_readonly("user_ns", &detail::XInteractiveShell::user_ns)
-            .def_readonly("builtin_trap", &detail::XInteractiveShell::builtin_trap)
-            .def_readonly("ipython_dir", &detail::XInteractiveShell::ipython_dir)
-            .def("run_line_magic", &detail::XInteractiveShell::run_line_magic)
-            .def("run_cell_magic", &detail::XInteractiveShell::run_cell_magic)
-            .def("system", &detail::XInteractiveShell::system)
-            .def("getoutput", &detail::XInteractiveShell::getoutput)
-            .def("register_post_execute", &detail::XInteractiveShell::register_post_execute)
-            .def("enable_gui", &detail::XInteractiveShell::enable_gui)
-            .def("showtraceback", &detail::XInteractiveShell::showtraceback)
-            .def("observe", &detail::XInteractiveShell::observe)
+            .def_readwrite("magics_manager", &XInteractiveShell::magics_manager)
+            .def_readonly("extension_manager", &XInteractiveShell::extension_manager)
+            .def_readonly("hooks", &XInteractiveShell::hooks)
+            .def_readonly("db", &XInteractiveShell::db)
+            .def_readonly("user_ns", &XInteractiveShell::user_ns)
+            .def_readonly("builtin_trap", &XInteractiveShell::builtin_trap)
+            .def_readonly("ipython_dir", &XInteractiveShell::ipython_dir)
+            .def("run_line_magic", &XInteractiveShell::run_line_magic)
+            .def("run_cell_magic", &XInteractiveShell::run_cell_magic)
+            .def("system", &XInteractiveShell::system)
+            .def("getoutput", &XInteractiveShell::getoutput)
+            .def("register_post_execute", &XInteractiveShell::register_post_execute)
+            .def("enable_gui", &XInteractiveShell::enable_gui)
+            .def("showtraceback", &XInteractiveShell::showtraceback)
+            .def("observe", &XInteractiveShell::observe)
             .def("register_magic_function",
-                &detail::XInteractiveShell::register_magic_function,
+                &XInteractiveShell::register_magic_function,
                 "Register magic function",
                 py::arg("func"),
                 py::arg("magic_kind")="line",
                 py::arg("magic_name")=py::none())
-            .def("register_magics", &detail::XInteractiveShell::register_magics);
+            .def("register_magics", &XInteractiveShell::register_magics);
 
         py::module::import("IPython.core.interactiveshell").attr("InteractiveShellABC").attr("register")(XInteractiveShell);
 
