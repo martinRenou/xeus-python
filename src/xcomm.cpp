@@ -183,21 +183,20 @@ namespace xpyt
      * kernel module *
      *****************/
 
-    py::module get_kernel_module_impl(const xeus::xhistory_manager & history_manager)
+    py::module get_kernel_module_impl()
     {
         py::module kernel_module = py::module("kernel");
 
         py::class_<detail::xmock_object> _Mock(kernel_module, "_Mock");
-        py::class_<xinteractive_shell> xinteractive_shell(
-            kernel_module, "xinteractive_shell", py::dynamic_attr());
+        py::class_<xinteractive_shell> XInteractiveShell(
+            kernel_module, "XInteractiveShell", py::dynamic_attr());
 
         py::class_<hooks_object>(kernel_module, "Hooks")
             .def_static("show_in_pager", &hooks_object::show_in_pager);
-        //py::class_<xeus::xhistory_manager> HistoryManager(kernel_module, "HistoryManager");
+        py::class_<xeus::xhistory_manager>(kernel_module, "HistoryManager");
 
-        xinteractive_shell.def(py::init<const xeus::xhistory_manager &>())
-            .def_property_readonly("magics_manager", &xinteractive_shell::get_magics_manager)
-            .def_property_readonly("extension_manager", &xinteractive_shell::get_extension_manager)
+        XInteractiveShell.def(py::init<>())
+            .def_property_readonly("magics_manager", &xinteractive_shell::get_magics_manager) .def_property_readonly("extension_manager", &xinteractive_shell::get_extension_manager)
             .def_property_readonly("hooks", &xinteractive_shell::get_hooks)
             .def_property_readonly("db", &xinteractive_shell::get_db)
             .def_property_readonly("user_ns", &xinteractive_shell::get_user_ns)
@@ -205,6 +204,7 @@ namespace xpyt
             .def_property_readonly("ipython_dir", &xinteractive_shell::get_ipython_dir)
             .def_property_readonly("dir_stack", &xinteractive_shell::get_dir_stack)
             .def_property_readonly("home_dir", &xinteractive_shell::get_home_dir)
+            .def_property_readonly("history_manager", [](xinteractive_shell &a){return &a.get_history_manager();})
             .def("run_line_magic", &xinteractive_shell::run_line_magic)
             .def("run_cell_magic", &xinteractive_shell::run_cell_magic)
             // magic is deprecated but some magic functions still use it
@@ -225,7 +225,7 @@ namespace xpyt
                 py::arg("magic_name")=py::none())
             .def("register_magics", &xinteractive_shell::register_magics);
 
-        py::module::import("IPython.core.interactiveshell").attr("InteractiveShellABC").attr("register")(xinteractive_shell);
+        py::module::import("IPython.core.interactiveshell").attr("InteractiveShellABC").attr("register")(XInteractiveShell);
 
         py::class_<xcomm>(kernel_module, "Comm")
             .def(py::init<py::args, py::kwargs>())
@@ -246,7 +246,7 @@ namespace xpyt
         comm_manager.attr("register_target") = kernel_module.attr("register_target");
         kernel.attr("comm_manager") = comm_manager;
 
-        py::object xeus_python =  kernel_module.attr("xinteractive_shell")(history_manager);
+        py::object xeus_python =  kernel_module.attr("XInteractiveShell")();
         xeus_python.attr("kernel") = kernel;
 
         kernel_module.def("get_ipython", [xeus_python]() {
@@ -256,9 +256,9 @@ namespace xpyt
         return kernel_module;
     }
 
-    py::module get_kernel_module(const xeus::xhistory_manager & history_manager)
+    py::module get_kernel_module()
     {
-        static py::module kernel_module = get_kernel_module_impl(history_manager);
+        static py::module kernel_module = get_kernel_module_impl();
         return kernel_module;
     }
 }

@@ -18,7 +18,7 @@ namespace py = pybind11;
 
 namespace xpyt
 {
-    py::module get_kernel_module(const xeus::xhistory_manager & history_manager);
+    py::module get_kernel_module();
 }
 
 #endif

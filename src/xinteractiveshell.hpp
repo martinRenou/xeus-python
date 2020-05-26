@@ -26,7 +26,7 @@ namespace xpyt
 
     public:
         // default constructor
-        xinteractive_shell(const xeus::xhistory_manager &);
+        xinteractive_shell();
 
         // mock required methods
         void register_post_execute(py::args, py::kwargs) {};
@@ -57,8 +57,7 @@ namespace xpyt
         py::list get_dir_stack() { return m_dir_stack;};
         py::str get_home_dir() { return m_home_dir;};
 
-        //history manager
-        const xeus::xhistory_manager * p_history_manager;
+        const xeus::xhistory_manager & get_history_manager();
 
     private:
         py::module m_ipy_process;
@@ -85,5 +84,8 @@ namespace xpyt
         py::str m_home_dir;
 
         void init_magics();
+
+        //history manager
+        const xeus::xhistory_manager * p_history_manager;
     };
 };

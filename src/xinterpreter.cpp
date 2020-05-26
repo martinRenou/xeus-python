@@ -71,15 +71,13 @@ namespace xpyt
 #endif
 
         // Monkey patching "from ipykernel.comm import Comm"
-        const xeus::xhistory_manager & history_manager = get_history_manager();
-        auto kernel_module = get_kernel_module(history_manager);
-        sys.attr("modules")["ipykernel.comm"] = kernel_module;
+        sys.attr("modules")["ipykernel.comm"] = get_kernel_module();
 
         // Monkey patching "import IPython.core.display"
         sys.attr("modules")["IPython.core.display"] = get_display_module();
 
         // Monkey patching "from IPython import get_ipython"
-        sys.attr("modules")["IPython.core.getipython"] = kernel_module;
+        sys.attr("modules")["IPython.core.getipython"] = get_kernel_module();
 
 
         // add get_ipython to global namespace

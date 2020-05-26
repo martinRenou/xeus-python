@@ -1,4 +1,5 @@
 #include "xinteractiveshell.hpp"
+#include "xeus/xinterpreter.hpp"
 #include "xeus/xhistory_manager.hpp"
 #include "xdisplay.hpp"
 
@@ -63,9 +64,9 @@ namespace xpyt
     }
 
 
-    xinteractive_shell::xinteractive_shell(const xeus::xhistory_manager & history_manager)
+    xinteractive_shell::xinteractive_shell()
     {
-        p_history_manager = &history_manager;
+        p_history_manager = &xeus::get_interpreter().get_history_manager();
         m_hooks = hooks_object();
         m_ipy_process = py::module::import("IPython.utils.process");
         py::module os_module = py::module::import("os");
@@ -161,6 +162,11 @@ namespace xpyt
     hooks_object xinteractive_shell::get_hooks()
     {
         return m_hooks;
+    }
+
+    const xeus::xhistory_manager & xinteractive_shell::get_history_manager()
+    {
+        return *p_history_manager;
     }
 
 }
