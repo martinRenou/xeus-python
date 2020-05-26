@@ -22,12 +22,6 @@ namespace xpyt
     class xinteractive_shell
     {
 
-    private:
-        py::module _ipy_process;
-        py::module _magic_core;
-        py::module _magics_module;
-        py::module _extension_module;
-
     public:
         //required by cd magic and others
         py::dict db;
@@ -62,6 +56,13 @@ namespace xpyt
         void register_magic_function(py::object func, std::string magic_kind, py::object magic_name);
 
         void register_magics(py::args args);
+
+    private:
+        py::module m_ipy_process;
+        py::module m_magic_core;
+        py::module m_magics_module;
+        py::module m_extension_module;
+
 
     };
 };

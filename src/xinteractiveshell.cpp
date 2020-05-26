@@ -9,21 +9,21 @@ namespace xpyt
 
     void xinteractive_shell::init_magics()
     {
-        _magic_core = py::module::import("IPython.core.magic");
-        _magics_module = py::module::import("IPython.core.magics");
-        _extension_module = py::module::import("IPython.core.extensions");
+        m_magic_core = py::module::import("IPython.core.magic");
+        m_magics_module = py::module::import("IPython.core.magics");
+        m_extension_module = py::module::import("IPython.core.extensions");
 
-        magics_manager = _magic_core.attr("MagicsManager")("shell"_a=this);
-        extension_manager = _extension_module.attr("ExtensionManager")("shell"_a=this);
+        magics_manager = m_magic_core.attr("MagicsManager")("shell"_a=this);
+        extension_manager = m_extension_module.attr("ExtensionManager")("shell"_a=this);
 
         //shell features required by extension manager
         builtin_trap = py::module::import("contextlib").attr("nullcontext")();
         ipython_dir = "";
 
-        py::object osm_magics =  _magics_module.attr("OSMagics");
-        py::object basic_magics =  _magics_module.attr("BasicMagics");
-        py::object user_magics =  _magics_module.attr("UserMagics");
-        py::object extension_magics =  _magics_module.attr("ExtensionMagics");
+        py::object osm_magics =  m_magics_module.attr("OSMagics");
+        py::object basic_magics =  m_magics_module.attr("BasicMagics");
+        py::object user_magics =  m_magics_module.attr("UserMagics");
+        py::object extension_magics =  m_magics_module.attr("ExtensionMagics");
         magics_manager.attr("register")(osm_magics);
         magics_manager.attr("register")(basic_magics);
         magics_manager.attr("register")(user_magics);
@@ -53,7 +53,7 @@ namespace xpyt
     xinteractive_shell::xinteractive_shell()
     {
         hooks = hooks_object();
-        _ipy_process = py::module::import("IPython.utils.process");
+        m_ipy_process = py::module::import("IPython.utils.process");
         db = py::dict();
         user_ns = py::dict("_dh"_a=py::list());
         init_magics();
@@ -61,12 +61,12 @@ namespace xpyt
 
     py::object xinteractive_shell::system(py::str cmd)
     {
-        return _ipy_process.attr("system")(cmd);
+        return m_ipy_process.attr("system")(cmd);
     }
 
     py::object xinteractive_shell::getoutput(py::str cmd)
     {
-        auto stream = _ipy_process.attr("getoutput")(cmd);
+        auto stream = m_ipy_process.attr("getoutput")(cmd);
         return stream.attr("splitlines")();
     }
 
