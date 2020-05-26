@@ -7,7 +7,8 @@ namespace py = pybind11;
 namespace xpyt
 {
 
-    void XInteractiveShell::init_magics() {
+    void xinteractive_shell::init_magics()
+    {
         _magic_core = py::module::import("IPython.core.magic");
         _magics_module = py::module::import("IPython.core.magics");
         _extension_module = py::module::import("IPython.core.extensions");
@@ -49,7 +50,8 @@ namespace xpyt
     }
 
 
-    XInteractiveShell::XInteractiveShell() {
+    xinteractive_shell::xinteractive_shell()
+    {
         hooks = hooks_object();
         _ipy_process = py::module::import("IPython.utils.process");
         db = py::dict();
@@ -57,16 +59,18 @@ namespace xpyt
         init_magics();
     }
 
-    py::object XInteractiveShell::system(py::str cmd) {
+    py::object xinteractive_shell::system(py::str cmd)
+    {
         return _ipy_process.attr("system")(cmd);
     }
 
-    py::object XInteractiveShell::getoutput(py::str cmd) {
+    py::object xinteractive_shell::getoutput(py::str cmd)
+    {
         auto stream = _ipy_process.attr("getoutput")(cmd);
         return stream.attr("splitlines")();
     }
 
-    py::object XInteractiveShell::run_line_magic(std::string name, std::string arg)
+    py::object xinteractive_shell::run_line_magic(std::string name, std::string arg)
     {
 
         py::object magic_method = magics_manager
@@ -82,7 +86,7 @@ namespace xpyt
 
     }
 
-    py::object XInteractiveShell::run_cell_magic(std::string name, std::string arg, std::string body)
+    py::object xinteractive_shell::run_cell_magic(std::string name, std::string arg, std::string body)
     {
         py::object magic_method = magics_manager.attr("magics")["cell"].attr("get")(name);
 
@@ -94,13 +98,13 @@ namespace xpyt
         return magic_method(arg, body);
     }
 
-    void XInteractiveShell::register_magic_function(py::object func, std::string magic_kind, py::object magic_name)
+    void xinteractive_shell::register_magic_function(py::object func, std::string magic_kind, py::object magic_name)
     {
         magics_manager.attr("register_function")(
             func, "magic_kind"_a=magic_kind, "magic_name"_a=magic_name);
     }
 
-    void XInteractiveShell::register_magics(py::args args)
+    void xinteractive_shell::register_magics(py::args args)
     {
         magics_manager.attr("register")(*args);
     }

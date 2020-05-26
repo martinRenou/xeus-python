@@ -13,15 +13,14 @@ namespace xpyt
 
     struct hooks_object
     {
-        hooks_object() {}
         static inline void show_in_pager(py::str data, py::kwargs)
         {
             xdisplay(py::dict("text/plain"_a=data), {}, {}, py::dict(), py::none(), py::none(), false, true);
         }
-
     };
 
-    class XInteractiveShell {
+    class xinteractive_shell
+    {
 
     private:
         py::module _ipy_process;
@@ -50,7 +49,7 @@ namespace xpyt
 
         void init_magics();
 
-        XInteractiveShell();
+        xinteractive_shell();
 
         py::object system(py::str cmd);
 
