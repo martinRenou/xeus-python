@@ -63,6 +63,7 @@ namespace xpyt
     {
         m_hooks = hooks_object();
         m_ipy_process = py::module::import("IPython.utils.process");
+        py::module os_module = py::module::import("os");
         m_db = py::dict();
         m_user_ns = py::dict("_dh"_a=py::list());
         dir_stack = py::list();

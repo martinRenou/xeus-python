@@ -202,12 +202,12 @@ namespace xpyt
             .def_property_readonly("user_ns", &xinteractive_shell::get_user_ns)
             .def_property_readonly("builtin_trap", &xinteractive_shell::get_builtin_trap)
             .def_property_readonly("ipython_dir", &xinteractive_shell::get_ipython_dir)
-            .def_readonly("dir_stack", &XInteractiveShell::dir_stack)
-            .def_readonly("home_dir", &XInteractiveShell::home_dir)
+            .def_readonly("dir_stack", &xinteractive_shell::dir_stack)
+            .def_readonly("home_dir", &xinteractive_shell::home_dir)
             .def("run_line_magic", &xinteractive_shell::run_line_magic)
             .def("run_cell_magic", &xinteractive_shell::run_cell_magic)
             // magic is deprecated but some magic functions still use it
-            .def("magic", &XInteractiveShell::run_line_magic,
+            .def("magic", &xinteractive_shell::run_line_magic,
                 "name"_a,
                 "arg"_a="")
             .def("system", &xinteractive_shell::system)
