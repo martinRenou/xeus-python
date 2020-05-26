@@ -183,7 +183,7 @@ namespace xpyt
      * kernel module *
      *****************/
 
-    py::module get_kernel_module_impl()
+    py::module get_kernel_module_impl(const xeus::xhistory_manager & history_manager)
     {
         py::module kernel_module = py::module("kernel");
 
@@ -193,8 +193,9 @@ namespace xpyt
 
         py::class_<hooks_object>(kernel_module, "Hooks")
             .def_static("show_in_pager", &hooks_object::show_in_pager);
+        //py::class_<xeus::xhistory_manager> HistoryManager(kernel_module, "HistoryManager");
 
-        xinteractive_shell.def(py::init<>())
+        xinteractive_shell.def(py::init<const xeus::xhistory_manager &>())
             .def_property_readonly("magics_manager", &xinteractive_shell::get_magics_manager)
             .def_property_readonly("extension_manager", &xinteractive_shell::get_extension_manager)
             .def_property_readonly("hooks", &xinteractive_shell::get_hooks)
@@ -245,7 +246,7 @@ namespace xpyt
         comm_manager.attr("register_target") = kernel_module.attr("register_target");
         kernel.attr("comm_manager") = comm_manager;
 
-        py::object xeus_python =  kernel_module.attr("xinteractive_shell")();
+        py::object xeus_python =  kernel_module.attr("xinteractive_shell")(history_manager);
         xeus_python.attr("kernel") = kernel;
 
         kernel_module.def("get_ipython", [xeus_python]() {
@@ -255,9 +256,9 @@ namespace xpyt
         return kernel_module;
     }
 
-    py::module get_kernel_module()
+    py::module get_kernel_module(const xeus::xhistory_manager & history_manager)
     {
-        static py::module kernel_module = get_kernel_module_impl();
+        static py::module kernel_module = get_kernel_module_impl(history_manager);
         return kernel_module;
     }
 }

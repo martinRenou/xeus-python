@@ -1,4 +1,5 @@
 #include "xinteractiveshell.hpp"
+#include "xeus/xhistory_manager.hpp"
 #include "xdisplay.hpp"
 
 using namespace pybind11::literals;
@@ -24,10 +25,12 @@ namespace xpyt
         py::object basic_magics =  m_magics_module.attr("BasicMagics");
         py::object user_magics =  m_magics_module.attr("UserMagics");
         py::object extension_magics =  m_magics_module.attr("ExtensionMagics");
+        py::object history_magics =  m_magics_module.attr("HistoryMagics");
         m_magics_manager.attr("register")(osm_magics);
         m_magics_manager.attr("register")(basic_magics);
         m_magics_manager.attr("register")(user_magics);
         m_magics_manager.attr("register")(extension_magics);
+        m_magics_manager.attr("register")(history_magics);
         m_magics_manager.attr("user_magics") = user_magics("shell"_a=this);
 
         //select magics supported by xeus-python
@@ -46,7 +49,8 @@ namespace xpyt
            "dhist"_a=line_magics["dhist"],
            "sx"_a=line_magics["sx"],
            "system"_a=line_magics["system"],
-           "bookmark"_a=line_magics["bookmark"]
+           "bookmark"_a=line_magics["bookmark"],
+           "history"_a=line_magics["history"]
         );
         cell_magics = py::dict(
             "writefile"_a=cell_magics["writefile"],
@@ -59,8 +63,9 @@ namespace xpyt
     }
 
 
-    xinteractive_shell::xinteractive_shell()
+    xinteractive_shell::xinteractive_shell(const xeus::xhistory_manager & history_manager)
     {
+        p_history_manager = &history_manager;
         m_hooks = hooks_object();
         m_ipy_process = py::module::import("IPython.utils.process");
         py::module os_module = py::module::import("os");

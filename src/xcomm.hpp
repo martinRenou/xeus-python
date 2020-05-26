@@ -12,12 +12,13 @@
 #define XPYT_KERNEL_HPP
 
 #include "pybind11/pybind11.h"
+#include "xeus/xhistory_manager.hpp"
 
 namespace py = pybind11;
 
 namespace xpyt
 {
-    py::module get_kernel_module();
+    py::module get_kernel_module(const xeus::xhistory_manager & history_manager);
 }
 
 #endif

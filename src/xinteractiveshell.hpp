@@ -1,6 +1,8 @@
 #include "pybind11/pybind11.h"
 #include "xdisplay.hpp"
 
+#include "xeus/xhistory_manager.hpp"
+
 #ifdef __GNUC__
     #pragma GCC diagnostic ignored "-Wattributes"
 #endif
@@ -24,8 +26,7 @@ namespace xpyt
 
     public:
         // default constructor
-        xinteractive_shell();
-
+        xinteractive_shell(const xeus::xhistory_manager &);
 
         // mock required methods
         void register_post_execute(py::args, py::kwargs) {};
@@ -55,6 +56,9 @@ namespace xpyt
         hooks_object get_hooks();
         py::list get_dir_stack() { return m_dir_stack;};
         py::str get_home_dir() { return m_home_dir;};
+
+        //history manager
+        const xeus::xhistory_manager * p_history_manager;
 
     private:
         py::module m_ipy_process;
