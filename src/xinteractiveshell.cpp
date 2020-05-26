@@ -66,8 +66,8 @@ namespace xpyt
         py::module os_module = py::module::import("os");
         m_db = py::dict();
         m_user_ns = py::dict("_dh"_a=py::list());
-        dir_stack = py::list();
-        home_dir = os_module.attr("path").attr("expanduser")("~");
+        m_dir_stack = py::list();
+        m_home_dir = os_module.attr("path").attr("expanduser")("~");
         init_magics();
     }
 

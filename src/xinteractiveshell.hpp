@@ -26,9 +26,6 @@ namespace xpyt
         // default constructor
         xinteractive_shell();
 
-        //required by pushd
-        py::list dir_stack;
-        py::str home_dir;
 
         // mock required methods
         void register_post_execute(py::args, py::kwargs) {};
@@ -56,6 +53,8 @@ namespace xpyt
         py::object get_builtin_trap();
         py::str get_ipython_dir();
         hooks_object get_hooks();
+        py::list get_dir_stack() { return m_dir_stack;};
+        py::str get_home_dir() { return m_home_dir;};
 
     private:
         py::module m_ipy_process;
@@ -74,7 +73,12 @@ namespace xpyt
         py::object m_builtin_trap;
         py::str m_ipython_dir;
 
+        // pager, required by %magics
         hooks_object m_hooks;
+
+        //required by pushd
+        py::list m_dir_stack;
+        py::str m_home_dir;
 
         void init_magics();
     };
