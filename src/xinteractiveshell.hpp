@@ -33,7 +33,6 @@ namespace xpyt
         void observe(py::args, py::kwargs) {};
         void showtraceback(py::args, py::kwargs) {};
 
-        void init_magics();
 
         // run system commands
         py::object system(py::str cmd);
@@ -75,5 +74,6 @@ namespace xpyt
 
         hooks_object m_hooks;
 
+        void init_magics();
     };
 };
