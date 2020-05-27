@@ -196,7 +196,8 @@ namespace xpyt
         py::class_<xeus::xhistory_manager>(kernel_module, "HistoryManager");
 
         XInteractiveShell.def(py::init<>())
-            .def_property_readonly("magics_manager", &xinteractive_shell::get_magics_manager) .def_property_readonly("extension_manager", &xinteractive_shell::get_extension_manager)
+            .def_property_readonly("magics_manager", &xinteractive_shell::get_magics_manager)
+            .def_property_readonly("extension_manager", &xinteractive_shell::get_extension_manager)
             .def_property_readonly("hooks", &xinteractive_shell::get_hooks)
             .def_property_readonly("db", &xinteractive_shell::get_db)
             .def_property_readonly("user_ns", &xinteractive_shell::get_user_ns)
@@ -204,13 +205,11 @@ namespace xpyt
             .def_property_readonly("ipython_dir", &xinteractive_shell::get_ipython_dir)
             .def_property_readonly("dir_stack", &xinteractive_shell::get_dir_stack)
             .def_property_readonly("home_dir", &xinteractive_shell::get_home_dir)
-            .def_property_readonly("history_manager", [](xinteractive_shell &a){return &a.get_history_manager();})
+            .def_property_readonly("history_manager", &xinteractive_shell::get_history_manager)
             .def("run_line_magic", &xinteractive_shell::run_line_magic)
             .def("run_cell_magic", &xinteractive_shell::run_cell_magic)
             // magic is deprecated but some magic functions still use it
-            .def("magic", &xinteractive_shell::run_line_magic,
-                "name"_a,
-                "arg"_a="")
+            .def("magic", &xinteractive_shell::run_line_magic, "name"_a, "arg"_a="")
             .def("system", &xinteractive_shell::system)
             .def("getoutput", &xinteractive_shell::getoutput)
             .def("register_post_execute", &xinteractive_shell::register_post_execute)

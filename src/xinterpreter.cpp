@@ -41,6 +41,25 @@ using namespace pybind11::literals;
 
 namespace xpyt
 {
+
+    interpreter::interpreter(bool redirect_output_enabled/*=true*/, bool redirect_display_enabled/*=true*/)
+    {
+        xeus::register_interpreter(this);
+        if (redirect_output_enabled)
+        {
+            redirect_output();
+        }
+        redirect_display(redirect_display_enabled);
+
+        // Monkey patch the IPython modules later in the execution, in the configure_impl
+        // This is needed because the kernel needs to initialize the history_manager before
+        // we can expose it to Python.
+    }
+
+    interpreter::~interpreter()
+    {
+    }
+
     void interpreter::configure_impl()
     {
         // The GIL is not held by default by the interpreter, so every time we need to execute Python code we
@@ -52,16 +71,6 @@ namespace xpyt
         jedi.attr("api").attr("environment").attr("get_default_environment") = py::cpp_function([jedi] () {
             jedi.attr("api").attr("environment").attr("SameEnvironment")();
         });
-    }
-
-    interpreter::interpreter(bool redirect_output_enabled/*=true*/, bool redirect_display_enabled/*=true*/)
-    {
-        xeus::register_interpreter(this);
-        if (redirect_output_enabled)
-        {
-            redirect_output();
-        }
-        redirect_display(redirect_display_enabled);
 
         py::module sys = py::module::import("sys");
 
@@ -79,13 +88,8 @@ namespace xpyt
         // Monkey patching "from IPython import get_ipython"
         sys.attr("modules")["IPython.core.getipython"] = get_kernel_module();
 
-
         // add get_ipython to global namespace
         exec(py::str("from IPython.core.getipython import get_ipython"));
-    }
-
-    interpreter::~interpreter()
-    {
     }
 
     nl::json interpreter::execute_request_impl(int execution_count,
