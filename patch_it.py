@@ -1,10 +1,9 @@
-
-with open('./bld_ems/xpython_wasm.js', 'r') as f:
+with open('./build/xpython_wasm.js', 'r') as f:
     content = f.read()
 
 
 query = 'Module["preloadPlugins"].push(audioPlugin);'
-content = content.replace(query,'')
+content = content.replace(query, '')
 
-with open('./bld_ems/xpython_wasm.js', 'w')  as f:
+with open('./build/xpython_wasm.js', 'w') as f:
     f.write(content)
