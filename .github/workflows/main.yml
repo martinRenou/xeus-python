@@ -203,4 +203,4 @@ jobs:
           popd
 
           # Patch output
-          python patch_it.py
+          python wasm_patches/patch_it.py
